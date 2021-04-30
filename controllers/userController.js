@@ -63,7 +63,7 @@ exports.login = async (req, res, next) => {
     try {
         const { email, username, password } = req.body;
 
-        const user = await User.findAll({ where: { [Op.or]: [{ email: email }, { username: username }] } });
+        const user = await User.findOne({ where: { [Op.or]: [{ email: email }, { username: username }] } });
         if (!user) return res.status(400).json({ message: 'username or password incorrect' });
 
         const isMatch = await bcrypt.compare(password, user.password);
