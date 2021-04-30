@@ -6,5 +6,5 @@ Port 8000
 | Description | Method | Route |
 |---|---|---|
 | register | POST | [/user/register]() |
-| login | POST | [/user/register]() |
+| login | POST | [/user/login]() |
 
