@@ -3,8 +3,8 @@
 Port 8000
 
 ### user
-| Description | Method | Route |
-|---|---|---|
-| register | POST | [/user/register]() |
-| login | POST | [/user/login]() |
+| Description | Method | Route | Header |
+|---|---|---|---|
+| register | POST | [/user/register]() | multipart/form-data |
+| login | POST | [/user/login]() | |
 
