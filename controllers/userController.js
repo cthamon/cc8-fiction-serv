@@ -2,6 +2,8 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { Op } = require('sequelize');
 const { User } = require('../models');
+const cloudinary = require('cloudinary').v2;
+const fs = require('fs');
 
 exports.protect = async (req, res, next) => {
     try {
@@ -36,22 +38,31 @@ exports.me = (req, res, next) => {
     });
 };
 
+exports.uploadPicture = async (req, res, next) => {
+    cloudinary.uploader.upload(req.file.path, { folder: "/project/profile" }, async (err, result) => {
+        if (err) return next(err);
+        req.imgUrl = result.secure_url;
+        fs.unlinkSync(req.file.path);
+        next();
+    });
+};
+
 exports.register = async (req, res, next) => {
     try {
-        const { email, username, password, confirmPassword, imgUrl, description, address, phoneNumber } = req.body;
+        const { email, username, password, confirmPassword, profileImg, description, address, phoneNumber } = req.body;
         if (password !== confirmPassword) return res.status(400).json({ message: 'password not match' });
         const hashedPassword = await bcrypt.hash(password, +process.env.BCRYPT_SALT);
         const user = await User.create({
             email,
             username,
             password: hashedPassword,
-            imgUrl,
+            profileImg: req.imgUrl,
             description,
             address,
             phoneNumber
         });
 
-        const payload = { id: user.id, email, username, imgUrl, description, address, phoneNumber };
+        const payload = { id: user.id, email, username, profileImg, description, address, phoneNumber };
         const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: +process.env.JWT_EXPIRES_IN });
         res.status(201).json({ token });
     } catch (err) {
@@ -77,19 +88,11 @@ exports.login = async (req, res, next) => {
     }
 };
 
-exports.updateUser = async (req, res, next) => {
-    try {
-        const { firstName, lastName, motto, location } = req.body;
-
-        // req.user.idfirstName = firstName;
-        // req.user.lastName = lastName;
-        // req.user.motto = motto;
-        // req.user.location = location;
-        // await req.user.save();
-
-        await User.update({ firstName, lastName, motto, location }, { where: { id: req.user.id } });
-        res.status(200).json({ message: 'update user success' });
-    } catch (err) {
-        next(err);
-    }
+exports.reUploadPicture = async (req, res, next) => {
+    cloudinary.uploader.upload(req.file.path, { folder: "/project/profile" }, async (err, result) => {
+        if (err) return next(err);
+        await User.update({ profileImg: result.secure_url }, { where: { id: req.user.id } });
+        fs.unlinkSync(req.file.path);
+        res.status(200).json({ message: 'image upload' });
+    });
 };
