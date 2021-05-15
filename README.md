@@ -29,3 +29,15 @@ Port 8000
 | update content | PATCH | [/editcontent/:novelId/:episodeNumber]() | TOKEN | {episodeTitle, content} | done |
 | delete content | DELETE | [/deletecontent/:novelId/:episodeNumber]() | TOKEN || done |
 
+### rating & comment
+| Description | Method | Route | Header | Body | Status |
+|---|---|---|---|---|---|
+| get rating by novel | GET | [/novel/rating/novelId]() | | | done |
+| create rating | POST | [/novel/rating/:novelId]() | TOKEN | { score, comment } | done |
+| update rating | PATCH | [/novel/updaterating/:novelId]() | TOKEN | { score, comment } | done |
+| delete rating | DELETE | [/novel/rating/:id]() | TOKEN | | done | 
+| get comment by episode | [/novel/comment/:novelContentId]() | | done |
+| create comment | POST | [/novel/comment/:novelContentId]() | TOKEN | { comment } | done |
+| create comment (optional) | POST | [/novel/comment/:novelId/:episodeNumber]() | TOKEN | { comment } | done |
+| update comment | PATCH | [/novel/updatecomment/:id]() | TOKEN | { comment } | done |
+| delete comment | DELETE | [/novel/comment/:id]() | TOKEN | | done | 
