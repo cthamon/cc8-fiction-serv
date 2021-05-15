@@ -7,8 +7,8 @@ const router = express.Router();
 
 router.get('/', novelController.getAllNovel);
 router.get('/:id', novelController.getNovel);
-// router.get('/episode/:novelId', novelController.getAllEpisode);
-// router.get('/episode/:novelId/:id', novelController.getEpisode);
+router.get('/:novelId/episode', novelController.getAllEpisode);
+router.get('/:novelId/episode/:episodeNumber', novelController.getEpisode);
 router.get('/user', userController.protect, novelController.getUserNovel);
 router.post('/create', userController.protect, upload.single('image'), novelController.uploadPicture, novelController.createNovel);
 router.post('/createcontent/:novelId', userController.protect, novelController.createEpisode);

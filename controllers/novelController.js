@@ -41,6 +41,26 @@ exports.getUserNovel = async (req, res, next) => {
     }
 };
 
+exports.getAllEpisode = async (req, res, next) => {
+    try {
+        const { novelId } = req.params;
+        const episodes = await NovelContent.findAll({ where: { novelId } });
+        res.status(200).json({ episodes });
+    } catch (err) {
+        next(err);
+    }
+};
+
+exports.getEpisode = async (req, res, next) => {
+    try {
+        const { novelId, episodeNumber } = req.params;
+        const episodes = await NovelContent.findAll({ where: { novelId, episodeNumber } });
+        res.status(200).json({ episodes });
+    } catch (err) {
+        next(err);
+    }
+};
+
 exports.createNovel = async (req, res, next) => {
     try {
         const { title, description, novelType, cover } = req.body;
