@@ -34,7 +34,7 @@ module.exports = (sequelize, DataTypes) => {
         });
         Novel.hasMany(models.NovelContent, {
             foreignKey: {
-                name: 'novelContentId',
+                name: 'novelId',
                 allowNull: false
             },
             onDelete: 'RESTRICT',

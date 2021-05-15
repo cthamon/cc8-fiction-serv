@@ -2,6 +2,10 @@ module.exports = (sequelize, DataTypes) => {
     const NovelContent = sequelize.define(
         'NovelContent',
         {
+            episodeNumber: {
+                type: DataTypes.INTEGER,
+                allowNull: false,
+            },
             episodeTitle: {
                 type: DataTypes.STRING,
                 allowNull: false,
