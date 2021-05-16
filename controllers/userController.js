@@ -1,7 +1,7 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { Op } = require('sequelize');
-const { User } = require('../models');
+const { User, Novel, NovelContent, Follow, FollowNovel, ReadHistory } = require('../models');
 const cloudinary = require('cloudinary').v2;
 const fs = require('fs');
 
@@ -131,13 +131,116 @@ exports.updateUser = async (req, res, next) => {
     }
 };
 
-exports.updateSecureUser = async () => {
+exports.updateSecureUser = async (req, res, next) => {
     try {
         const { currentPassword, description, address, phoneNumber } = req.body;
         const isMatch = await bcrypt.compare(currentPassword, req.user.password);
         if (!isMatch) return res.status(400).json({ message: 'incorrect current password' });
         await User.update({ description, address, phoneNumber }, { where: { id: req.user.id } });
         res.status(200).json({ message: 'update user success' });
+    } catch (err) {
+        next(err);
+    }
+};
+
+exports.getFollowList = async (req, res, next) => {
+    try {
+        const followList = await Follow.findAll({ where: { followerId: req.user.id }, include: { model: User, as: 'Following', attribute: ['id', 'username'] } });
+        const followLists = followList.map(item => { return { username: item.Following.username, profileImg: item.Following.profileImg, unFollowId: item.id }; });
+        res.status(200).json({ followLists });
+    } catch (err) {
+        next(err);
+    }
+};
+
+exports.follow = async (req, res, next) => {
+    try {
+        const { followingId } = req.params;
+        const followList = await Follow.findOne({ where: { [Op.and]: [{ followingId }, { followerId: req.user.id }] } });
+        if (followList) return res.status(400).json({ message: 'already follow' });
+        const follow = await Follow.create({ followerId: req.user.id, followingId });
+        res.status(200).json({ follow });
+    } catch (err) {
+        next(err);
+    }
+};
+
+exports.unfollow = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        await Follow.destroy({ where: { id } });
+        res.status(200).json({ message: 'unfollow' });
+    } catch (err) {
+        next(err);
+    }
+};
+
+exports.getFollowNovelList = async (req, res, next) => {
+    try {
+        const novelList = await FollowNovel.findAll({ where: { userId: req.user.id }, include: { model: Novel, include: { model: User } }, order: [[Novel, 'title']] });
+        const novelLists = novelList.map(item => { return { title: item.Novel.title, description: item.Novel.description, novelType: item.Novel.novelType, cover: item.Novel.cover, writer: item.Novel.User.username, unFollowNovelId: item.id }; });
+        res.status(200).json({ novelLists });
+    } catch (err) {
+        next(err);
+    }
+};
+
+exports.followNovel = async (req, res, next) => {
+    try {
+        const { novelId } = req.params;
+        const novelList = await FollowNovel.findOne({ where: { [Op.and]: [{ novelId }, { userId: req.user.id }] } });
+        if (novelList) return res.status(400).json({ message: 'already follow' });
+        const follow = await FollowNovel.create({ userId: req.user.id, novelId });
+        res.status(200).json({ follow });
+    } catch (err) {
+        next(err);
+    }
+};
+
+exports.unfollowNovel = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        await FollowNovel.destroy({ where: { id } });
+        res.status(200).json({ message: 'unfollow' });
+    } catch (err) {
+        next(err);
+    }
+};
+
+exports.viewHistory = async (req, res, next) => {
+    try {
+        const history = await ReadHistory.findAll({
+            where: { userId: req.user.id },
+            order: [['updatedAt', 'DESC']],
+            include: { model: NovelContent, include: Novel }
+        });
+        const histories = history.map(item => { return { novel: item.NovelContent.Novel.title, episodeTitle: item.NovelContent.episodeTitle, updatedAt: item.updatedAt, removeId: item.id }; });
+        res.status(200).json({ histories });
+    } catch (err) {
+        next(err);
+    }
+};
+
+exports.historySave = async (req, res, next) => {
+    try {
+        const { novelContentId } = req.params;
+        const history = await ReadHistory.findOne({ where: { [Op.and]: [{ novelContentId }, { userId: req.user.id }] } });
+        if (history) {
+            await ReadHistory.update({ userId: req.user.id }, { where: { [Op.and]: [{ novelContentId }, { userId: req.user.id }] } });
+            return res.status(400).json({ message: 'update time' });
+        }
+        const readHistory = await ReadHistory.create({ userId: req.user.id, novelContentId });
+        res.status(200).json({ readHistory });
+    } catch (err) {
+        next(err);
+    }
+};
+
+exports.removeHistory = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        await ReadHistory.destroy({ where: { id } });
+        res.status(200).json({ message: 'delete success' });
     } catch (err) {
         next(err);
     }

@@ -12,5 +12,15 @@ router.patch('/updatepic', userController.protect, upload.single('image'), userC
 router.patch('/deletepic', userController.protect, userController.deleteProfilePic);
 router.patch('/edit', userController.protect, userController.updateUser);
 router.patch('/editpw', userController.protect, userController.updateSecureUser);
+router.get('/follow/', userController.protect, userController.getFollowList);
+router.post('/follow/:followingId', userController.protect, userController.follow);
+router.delete('/unfollow/:id', userController.protect, userController.unfollow);
+router.get('/follownovel/', userController.protect, userController.getFollowNovelList);
+router.post('/follownovel/:novelId', userController.protect, userController.followNovel);
+router.delete('/unfollownovel/:id', userController.protect, userController.unfollowNovel);
+router.get('/history/', userController.protect, userController.viewHistory);
+router.post('/read/:novelContentId', userController.protect, userController.historySave);
+router.delete('/unread/:id', userController.protect, userController.removeHistory);
+
 
 module.exports = router;

@@ -6,10 +6,10 @@ const userController = require('../controllers/userController');
 const router = express.Router();
 
 router.get('/', novelController.getAllNovel);
+router.get('/user', userController.protect, novelController.getUserNovel);
 router.get('/:id', novelController.getNovel);
 router.get('/:novelId/episode', novelController.getAllEpisode);
 router.get('/:novelId/episode/:episodeNumber', novelController.getEpisode);
-router.get('/user', userController.protect, novelController.getUserNovel);
 router.post('/create', userController.protect, upload.single('image'), novelController.uploadPicture, novelController.createNovel);
 router.post('/createcontent/:novelId', userController.protect, novelController.createEpisode);
 router.patch('/updatepic/:id', userController.protect, upload.single('image'), novelController.uploadPicture, novelController.updateCoverPic);
@@ -22,6 +22,7 @@ router.post('/rating/:novelId', userController.protect, novelController.ratingNo
 router.patch('/updaterating/:novelId', userController.protect, novelController.updateRating);
 router.delete('/rating/:id', userController.protect, novelController.deleteRating);
 router.get('/comment/:novelContentId', novelController.getAllEpisodeComment);
+router.get('/comment/:novelId/:episodeNumber', novelController.getAllEpisodeCommentNumber);
 router.post('/comment/:novelContentId', userController.protect, novelController.commentEpisode);
 router.post('/comment/:novelId/:episodeNumber', userController.protect, novelController.commentEpisodeNumber);
 router.patch('/updatecomment/:id', userController.protect, novelController.updateComment);

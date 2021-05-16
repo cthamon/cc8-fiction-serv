@@ -1,5 +1,5 @@
-const { Novel, NovelContent, Rating, Comment, sequelize } = require('../models');
 const { Op } = require('sequelize');
+const { User, Novel, NovelContent, Rating, Comment, sequelize } = require('../models');
 const cloudinary = require('cloudinary').v2;
 const fs = require('fs');
 
@@ -14,7 +14,8 @@ exports.uploadPicture = async (req, res, next) => {
 
 exports.getAllNovel = async (req, res, next) => {
     try {
-        const novels = await Novel.findAll();
+        const novel = await Novel.findAll({ include: User });
+        novels = novel.map(({ id, title, description, novelType, cover, userId, User }) => { return { id, title, description, novelType, cover, userId, writer: User.username }; });
         res.status(200).json({ novels });
     } catch (err) {
         next(err);
@@ -24,7 +25,8 @@ exports.getAllNovel = async (req, res, next) => {
 exports.getNovel = async (req, res, next) => {
     try {
         const { id } = req.params;
-        const novel = await Novel.findAll({ where: { id } });
+        const novels = await Novel.findAll({ where: { id }, include: User });
+        [novel] = novels.map(({ id, title, description, novelType, cover, userId, User }) => { return { id, title, description, novelType, cover, userId, writer: User.username }; });
         res.status(200).json({ novel });
     } catch (err) {
         next(err);
@@ -33,7 +35,8 @@ exports.getNovel = async (req, res, next) => {
 
 exports.getUserNovel = async (req, res, next) => {
     try {
-        const novels = await Novel.findAll({ where: { userId: req.user.id } });
+        const novel = await Novel.findAll({ where: { userId: req.user.id }, include: User });
+        novels = novel.map(({ id, title, description, novelType, cover, userId, User }) => { return { id, title, description, novelType, cover, userId, writer: User.username }; });
         res.status(200).json({ novels });
     } catch (err) {
         next(err);
@@ -213,6 +216,18 @@ exports.getAllEpisodeComment = async (req, res, next) => {
     }
 };
 
+exports.getAllEpisodeCommentNumber = async (req, res, next) => {
+    try {
+        const { novelId, episodeNumber } = req.params;
+        let novelContentId = await NovelContent.findAll({ where: { [Op.and]: [{ novelId, episodeNumber }] } });
+        novelContentId = JSON.parse(JSON.stringify(novelContentId[0].id));
+        const userComment = await Comment.findAll({ where: { novelContentId } });
+        res.status(200).json({ userComment });
+    } catch (err) {
+        next(err);
+    }
+};
+
 exports.commentEpisode = async (req, res, next) => {
     try {
         const { novelContentId } = req.params;
@@ -230,7 +245,6 @@ exports.commentEpisodeNumber = async (req, res, next) => {
         const { comment } = req.body;
         let novelContentId = await NovelContent.findAll({ where: { [Op.and]: [{ novelId, episodeNumber }] } });
         novelContentId = JSON.parse(JSON.stringify(novelContentId[0].id));
-        console.log(novelContentId);
         const userComment = await Comment.create({ comment, novelContentId, userId: req.user.id });
         res.status(200).json({ userComment });
     } catch (err) {

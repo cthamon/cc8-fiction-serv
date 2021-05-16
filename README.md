@@ -18,6 +18,7 @@ Port 8000
 | Description | Method | Route | Header | Body | Status |
 |---|---|---|---|---|---|
 | fetch all novel | GET | [/novel/]() | | | done |
+| fetch novel | GET | [/novel/:id]() | | | done |
 | fetch novel by user | GET | [/novel/user]() | | | done |
 | create novel | POST | [/novel/create]() | TOKEN | [form-data]() ([text:]()) {title, description, novelType, cover} / ([file:]()) {image} | WIP (error if no file chosen) |
 | update cover pic | PATCH | [/novel/updatepic/:id]() | TOKEN | [form-data]() [file:]() {image} | done |
@@ -36,8 +37,24 @@ Port 8000
 | create rating | POST | [/novel/rating/:novelId]() | TOKEN | { score, comment } | done |
 | update rating | PATCH | [/novel/updaterating/:novelId]() | TOKEN | { score, comment } | done |
 | delete rating | DELETE | [/novel/rating/:id]() | TOKEN | | done | 
-| get comment by episode | [/novel/comment/:novelContentId]() | | done |
+| get comment by episode | GET | [/novel/comment/:novelContentId]() | | done |
+| get comment by episode (optional) | GET | [/novel/comment/:novelId/:episodeNumber]() | | done |
 | create comment | POST | [/novel/comment/:novelContentId]() | TOKEN | { comment } | done |
 | create comment (optional) | POST | [/novel/comment/:novelId/:episodeNumber]() | TOKEN | { comment } | done |
 | update comment | PATCH | [/novel/updatecomment/:id]() | TOKEN | { comment } | done |
 | delete comment | DELETE | [/novel/comment/:id]() | TOKEN | | done | 
+
+### follow writer(user) & follow novel
+| Description | Method | Route | Header | Body | Status |
+|---|---|---|---|---|---|
+| get following list | GET | [/user/follow]() | TOKEN | | done |
+| follow writer(user) | POST | [/user/follow/:followingId]() | TOKEN | | done |
+| unfollow writer(user) | DELETE | [/user/unfollow/:id]() | TOKEN | | done |
+| get following novel list | GET | [/user/follownovel]() | TOKEN | | done |
+| follow novel | POST | [/user/follownovel/:novelId]() | TOKEN | | done |
+| unfollow novel | DELETE | [/user/unfollow/:id]() | TOKEN | | done |
+
+### read history
+| get read history | GET | [/user/history]() | TOKEN | | done |
+| read history trigger | POST | [/user/read/:novelContentId]() | TOKEN | | done |
+| delete history | DELETE | [/user/unread/:id]() | TOKEN | | done |
