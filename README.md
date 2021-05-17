@@ -1,6 +1,6 @@
 # cc8-group-serv
 
-Port 8000
+localhost:8000
 
 ### user
 | Description | Method | Route | Header | Body | Status |
@@ -18,17 +18,19 @@ Port 8000
 | Description | Method | Route | Header | Body | Status |
 |---|---|---|---|---|---|
 | fetch all novel | GET | [/novel/]() | | | done |
-| fetch novel | GET | [/novel/:id]() | | | done |
 | fetch novel by user | GET | [/novel/user]() | | | done |
-| create novel | POST | [/novel/create]() | TOKEN | [form-data]() ([text:]()) {title, description, novelType, cover} / ([file:]()) {image} | WIP (error if no file chosen) |
-| update cover pic | PATCH | [/novel/updatepic/:id]() | TOKEN | [form-data]() [file:]() {image} | done |
-| update novel info | PATCH | [/novel/delete/:id]() | TOKEN | {title, description, novelType} | done |
-| delete content | DELETE | [/deletenovel/:Id/:episodeNumber]() | TOKEN || done |
-| create content | POST | [/novel/createcontent/:novelId]() | TOKEN | { episodeTitle, content} | done |
+| fetch novel | GET | [/novel/:id]() | | | done |
 | fetch all episode of novel | GET | [/novel/:novelId/episode]() | | | done |
-| fetch episode number of novel | GET | [//novel/:novelId/episode/:episodenumber]() | | | done |
-| update content | PATCH | [/editcontent/:novelId/:episodeNumber]() | TOKEN | {episodeTitle, content} | done |
-| delete content | DELETE | [/deletecontent/:novelId/:episodeNumber]() | TOKEN || done |
+| fetch episode number of novel by id | GET | [/novel/content/:id]() | | | done |
+| fetch episode number of novel | GET | [/novel/:novelId/episode/:episodeNumber]() | | | done |
+| create novel | POST | [/novel/create]() | TOKEN | [form-data]() ([text:]()) {title, description, novelType, cover} / ([file:]()) {image} | WIP (error if no file chosen) |
+| create content | POST | [/novel/createcontent/:novelId]() | TOKEN | { episodeNumber,episodeTitle, content} | done |
+| update cover pic | PATCH | [/novel/updatepic/:id]() | TOKEN | [form-data]() [file:]() {image} | done |
+| update novel info | PATCH | [/novel/edit/:id]() | TOKEN | {title, description, novelType} | done |
+| edit episode of novel (optional) | PATCH | [/novel/editcontent/:novelId/:episodeNumber]() | TOKEN | {title, description, novelType} | done |
+| edit episode of novel by id | PATCH | [/novel/editcontent/:id]() | TOKEN | {title, description, novelType} | done |
+| delete novel | DELETE | [novel/:id]() | TOKEN || done |
+| delete content | DELETE by id | [/content/:novelId/:episodeNumber]() | TOKEN || done |
 
 ### rating & comment
 | Description | Method | Route | Header | Body | Status |

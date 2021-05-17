@@ -1,5 +1,5 @@
 const { Op } = require('sequelize');
-const { User, Novel, NovelContent, Rating, Comment, sequelize } = require('../models');
+const { User, Novel, NovelContent, Rating, Comment, ReadHistory, FollowNovel, sequelize } = require('../models');
 const cloudinary = require('cloudinary').v2;
 const fs = require('fs');
 
@@ -26,7 +26,7 @@ exports.getNovel = async (req, res, next) => {
     try {
         const { id } = req.params;
         const novels = await Novel.findAll({ where: { id }, include: User });
-        [novel] = novels.map(({ id, title, description, novelType, cover, userId, User }) => { return { id, title, description, novelType, cover, userId, writer: User.username }; });
+        novel = novels.map(({ id, title, description, novelType, cover, userId, User }) => { return { id, title, description, novelType, cover, userId, writer: User.username }; });
         res.status(200).json({ novel });
     } catch (err) {
         next(err);
@@ -46,18 +46,31 @@ exports.getUserNovel = async (req, res, next) => {
 exports.getAllEpisode = async (req, res, next) => {
     try {
         const { novelId } = req.params;
-        const episodes = await NovelContent.findAll({ where: { novelId } });
+        const episode = await NovelContent.findAll({ where: { novelId }, include: { model: Novel, include: { model: User } } });
+        const episodes = episode.map(({ id, episodeNumber, episodeTitle, content, Novel }) => { return { id, title: Novel.title, writer: Novel.User.username, episodeNumber, episodeTitle, content }; });
         res.status(200).json({ episodes });
     } catch (err) {
         next(err);
     }
 };
 
+exports.getEpisodeById = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const episodes = await NovelContent.findAll({ where: { id }, include: { model: Novel, include: { model: User } } });
+        const episode = episodes.map(({ id, episodeNumber, episodeTitle, content, Novel }) => { return { id, title: Novel.title, writer: Novel.User.username, episodeNumber, episodeTitle, content }; });
+        res.status(200).json({ episode });
+    } catch (err) {
+        next(err);
+    };
+};
+
 exports.getEpisode = async (req, res, next) => {
     try {
         const { novelId, episodeNumber } = req.params;
-        const episodes = await NovelContent.findAll({ where: { novelId, episodeNumber } });
-        res.status(200).json({ episodes });
+        const episodes = await NovelContent.findAll({ where: { novelId, episodeNumber }, include: { model: Novel, include: { model: User } } });
+        const episode = episodes.map(({ id, episodeNumber, episodeTitle, content, Novel }) => { return { id, title: Novel.title, writer: Novel.User.username, episodeNumber, episodeTitle, content }; });
+        res.status(200).json({ episode });
     } catch (err) {
         next(err);
     }
@@ -114,6 +127,12 @@ exports.deleteNovel = async (req, res, next) => {
         if (req.user.id !== checker) return res.status(400).json({ message: 'you are not owner of the novel' });
         const publicId = `${url.split('/')[7]}/${url.split('/')[8]}/${(url.split('/')[9]).split('.')[0]}`;
         cloudinary.uploader.destroy(publicId, async (err, result) => { if (err) return next(err); });
+        const novels = await NovelContent.findAll({ where: { novelId: id } });
+        const novelContentId = await novels.map(item => item.id);
+        await ReadHistory.destroy({ where: { novelContentId } });
+        await Comment.destroy({ where: { novelContentId } });
+        await FollowNovel.destroy({ where: { novelId: id } });
+        await Rating.destroy({ where: { novelId: id } });
         await NovelContent.destroy({ where: { novelId: id } });
         await Novel.destroy({ where: { id } });
         res.status(200).json({ message: 'delete novel success' });
@@ -125,11 +144,15 @@ exports.deleteNovel = async (req, res, next) => {
 exports.createEpisode = async (req, res, next) => {
     try {
         const { novelId } = req.params;
-        const episodeNumber = await NovelContent.count({ where: { novelId } }) + 1;
+        const { episodeTitle, content } = req.body;
+        let { episodeNumber } = req.body;
+        if (!episodeNumber) episodeNumber = await NovelContent.count({ where: { novelId } }) + 1;
+        const checkDuplicate = await NovelContent.findAll({ where: { novelId } });
+        const checkDup = checkDuplicate.map(item => item.episodeNumber);
+        if (checkDup.includes(episodeNumber)) return res.status(400).json({ message: 'episode number exist' });
         let checker = await Novel.findAll({ where: { id: novelId } });
         checker = JSON.parse(JSON.stringify(checker[0].userId));
         if (req.user.id !== checker) return res.status(400).json({ message: 'you are not owner of the novel' });
-        const { episodeTitle, content } = req.body;
         const episode = await NovelContent.create({ episodeNumber, episodeTitle, content, novelId });
         res.status(200).json({ episode });
     } catch (err) {
@@ -151,13 +174,29 @@ exports.editNovelContent = async (req, res, next) => {
     }
 };
 
-exports.deleteContent = async (req, res, next) => {
+exports.editNovelContentById = async (req, res, next) => {
     try {
-        const { novelId, episodeNumber } = req.params;
-        let checker = await Novel.findAll({ where: { id: novelId } });
+        const { id } = req.params;
+        let checker = await Novel.findAll({ where: { id } });
         checker = JSON.parse(JSON.stringify(checker[0].userId));
         if (req.user.id !== checker) return res.status(400).json({ message: 'you are not owner of the novel' });
-        await NovelContent.destroy({ where: { [Op.and]: [{ novelId }, { episodeNumber }] } });
+        const { episodeTitle, content } = req.body;
+        await NovelContent.update({ episodeTitle, content }, { where: { id } });
+        res.status(200).json({ message: "update success" });
+    } catch (err) {
+        next(err);
+    }
+};
+
+exports.deleteContent = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        let checker = await Novel.findAll({ where: { id } });
+        checker = JSON.parse(JSON.stringify(checker[0].userId));
+        if (req.user.id !== checker) return res.status(400).json({ message: 'you are not owner of the novel' });
+        await ReadHistory.destroy({ where: { novelContentId: id } });
+        await Comment.destroy({ where: { novelContentId: id } });
+        await NovelContent.destroy({ where: { id } });
         res.status(200).json({ message: "delete success" });
     } catch (err) {
         next(err);
