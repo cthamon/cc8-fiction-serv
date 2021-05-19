@@ -78,14 +78,15 @@ exports.getEpisode = async (req, res, next) => {
 
 exports.createNovel = async (req, res, next) => {
     try {
-        const { title, description, novelType, cover } = req.body;
+        const { title, description, novelType, cover, price } = req.body;
         const { id } = (req.user);
         const novel = await Novel.create({
             userId: id,
             title,
             description,
             novelType,
-            cover: req.imgUrl
+            cover: req.imgUrl,
+            price
         });
         res.status(201).json({ novel });
     } catch (err) {
@@ -110,8 +111,8 @@ exports.updateCoverPic = async (req, res, next) => {
 exports.editNovel = async (req, res, next) => {
     try {
         const { id } = req.params;
-        const { title, description, novelType } = req.body;
-        await Novel.update({ title, description, novelType }, { where: { [Op.and]: [{ id }, { userId: req.user.id }] } });
+        const { title, description, novelType, price } = req.body;
+        await Novel.update({ title, description, novelType, price }, { where: { [Op.and]: [{ id }, { userId: req.user.id }] } });
         res.status(200).json({ message: 'update user success' });
     } catch (err) {
         next(err);
@@ -144,7 +145,7 @@ exports.deleteNovel = async (req, res, next) => {
 exports.createEpisode = async (req, res, next) => {
     try {
         const { novelId } = req.params;
-        const { episodeTitle, content } = req.body;
+        const { episodeTitle, content, price } = req.body;
         let { episodeNumber } = req.body;
         if (!episodeNumber) episodeNumber = await NovelContent.count({ where: { novelId } }) + 1;
         const checkDuplicate = await NovelContent.findAll({ where: { novelId } });
@@ -153,22 +154,8 @@ exports.createEpisode = async (req, res, next) => {
         let checker = await Novel.findAll({ where: { id: novelId } });
         checker = JSON.parse(JSON.stringify(checker[0].userId));
         if (req.user.id !== checker) return res.status(400).json({ message: 'you are not owner of the novel' });
-        const episode = await NovelContent.create({ episodeNumber, episodeTitle, content, novelId });
+        const episode = await NovelContent.create({ episodeNumber, episodeTitle, content, novelId, price });
         res.status(200).json({ episode });
-    } catch (err) {
-        next(err);
-    }
-};
-
-exports.editNovelContent = async (req, res, next) => {
-    try {
-        const { novelId, episodeNumber } = req.params;
-        let checker = await Novel.findAll({ where: { id: novelId } });
-        checker = JSON.parse(JSON.stringify(checker[0].userId));
-        if (req.user.id !== checker) return res.status(400).json({ message: 'you are not owner of the novel' });
-        const { episodeTitle, content } = req.body;
-        await NovelContent.update({ episodeTitle, content }, { where: { [Op.and]: [{ novelId }, { episodeNumber }] } });
-        res.status(200).json({ message: "update success" });
     } catch (err) {
         next(err);
     }
@@ -180,8 +167,8 @@ exports.editNovelContentById = async (req, res, next) => {
         let checker = await Novel.findAll({ where: { id } });
         checker = JSON.parse(JSON.stringify(checker[0].userId));
         if (req.user.id !== checker) return res.status(400).json({ message: 'you are not owner of the novel' });
-        const { episodeTitle, content } = req.body;
-        await NovelContent.update({ episodeTitle, content }, { where: { id } });
+        const { episodeTitle, content, price } = req.body;
+        await NovelContent.update({ episodeTitle, content, price }, { where: { id } });
         res.status(200).json({ message: "update success" });
     } catch (err) {
         next(err);

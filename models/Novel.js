@@ -16,7 +16,11 @@ module.exports = (sequelize, DataTypes) => {
             },
             cover: {
                 type: DataTypes.STRING
-            }
+            },
+            price: {
+                type: DataTypes.INTEGER,
+                allowNull: false,
+            },
         },
         {
             underscored: true

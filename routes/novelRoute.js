@@ -15,8 +15,7 @@ router.post('/create', userController.protect, upload.single('image'), novelCont
 router.post('/createcontent/:novelId', userController.protect, novelController.createEpisode);
 router.patch('/updatepic/:id', userController.protect, upload.single('image'), novelController.uploadPicture, novelController.updateCoverPic);
 router.patch('/edit/:id', userController.protect, novelController.editNovel);
-router.patch('/editcontent/:novelId/:episodeNumber', userController.protect, novelController.editNovelContent);
-router.patch('/editcontent/:id', userController.protect, novelController.editNovelContent);
+router.patch('/editcontent/:id', userController.protect, novelController.editNovelContentById);
 router.delete('/:id', userController.protect, novelController.deleteNovel);
 router.delete('/content/:id', userController.protect, novelController.deleteContent);
 router.get('/rating/:novelId', novelController.getAllNovelRating);

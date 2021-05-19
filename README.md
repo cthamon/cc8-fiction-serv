@@ -23,12 +23,11 @@ localhost:8000
 | fetch all episode of novel | GET | [/novel/:novelId/episode]() | | | done |
 | fetch episode number of novel by id | GET | [/novel/content/:id]() | | | done |
 | fetch episode number of novel | GET | [/novel/:novelId/episode/:episodeNumber]() | | | done |
-| create novel | POST | [/novel/create]() | TOKEN | [form-data]() ([text:]()) {title, description, novelType, cover} / ([file:]()) {image} | WIP (error if no file chosen) |
-| create content | POST | [/novel/createcontent/:novelId]() | TOKEN | { episodeNumber,episodeTitle, content} | done |
+| create novel | POST | [/novel/create]() | TOKEN | [form-data]() ([text:]()) {title, description, novelType, cover, price} / ([file:]()) {image} | WIP (error if no file chosen) |
+| create content | POST | [/novel/createcontent/:novelId]() | TOKEN | { episodeNumber, episodeTitle, content, price} | done |
 | update cover pic | PATCH | [/novel/updatepic/:id]() | TOKEN | [form-data]() [file:]() {image} | done |
-| update novel info | PATCH | [/novel/edit/:id]() | TOKEN | {title, description, novelType} | done |
-| edit episode of novel (optional) | PATCH | [/novel/editcontent/:novelId/:episodeNumber]() | TOKEN | {title, description, novelType} | done |
-| edit episode of novel by id | PATCH | [/novel/editcontent/:id]() | TOKEN | {title, description, novelType} | done |
+| update novel info | PATCH | [/novel/edit/:id]() | TOKEN | {title, description, novelType, price} | done |
+| edit episode of novel by id | PATCH | [/novel/editcontent/:id]() | TOKEN | {title, description, novelType, price} | done |
 | delete novel | DELETE | [novel/:id]() | TOKEN || done |
 | delete content | DELETE by id | [/content/:novelId/:episodeNumber]() | TOKEN || done |
 
@@ -57,6 +56,8 @@ localhost:8000
 | unfollow novel | DELETE | [/user/unfollow/:id]() | TOKEN | | done |
 
 ### read history
+| Description | Method | Route | Header | Body | Status |
+|---|---|---|---|---|---|
 | get read history | GET | [/user/history]() | TOKEN | | done |
 | read history trigger | POST | [/user/read/:novelContentId]() | TOKEN | | done |
 | delete history | DELETE | [/user/unread/:id]() | TOKEN | | done |

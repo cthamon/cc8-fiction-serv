@@ -4,6 +4,7 @@ const cors = require('cors');
 const { sequelize } = require('./models');
 const userRoute = require('./routes/userRoute');
 const novelRoute = require('./routes/novelRoute');
+const orderRoute = require('./routes/orderRoute');
 
 const app = express();
 
@@ -13,6 +14,7 @@ app.use(express.urlencoded({ extended: false }));
 
 app.use('/user', userRoute);
 app.use('/novel', novelRoute);
+app.use('/order', orderRoute);
 
 app.use((req, res) => {
     res.status(404).json({ message: 'path not found on this server' });

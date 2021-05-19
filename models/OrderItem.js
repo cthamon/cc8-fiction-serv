@@ -6,10 +6,6 @@ module.exports = (sequelize, DataTypes) => {
                 type: DataTypes.INTEGER,
                 allowNull: false,
             },
-            price: {
-                type: DataTypes.INTEGER,
-                allowNull: false,
-            },
             discount: {
                 type: DataTypes.FLOAT,
                 allowNull: false,
@@ -17,7 +13,7 @@ module.exports = (sequelize, DataTypes) => {
         },
         {
             underscored: true,
-            // timestamps: false
+            timestamps: false
         }
     );
 
