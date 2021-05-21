@@ -3,9 +3,23 @@ const { Order, OrderItem, User, Novel, NovelContent } = require('../models');
 
 exports.getOrder = async (req, res, next) => {
     try {
-        const order = await OrderItem.findAll({ include: [{ model: Order, where: { userId: req.user.id }, include: { model: User } }, { model: NovelContent, include: { model: Novel } }] });
-        const orders = order.map(({ orderId, Order, NovelContent }) => {
-            return { orderId, address: Order.address, createAt: Order.createdAt, novel: NovelContent.Novel.title, episode: NovelContent.episodeNumber, episodeTitle: NovelContent.episodeTitle, novelPrice: NovelContent.Novel.price, episodePrice: NovelContent.price, cover: NovelContent.Novel.cover, username: Order.User.username, email: Order.User.email, phoneNumber: Order.User.phoneNumber };
+        const order = await Order.findAll({ include: [{ model: OrderItem, include: { model: NovelContent, include: { model: Novel, include: { model: User } } } }, { model: User }], where: { userId: req.user.id } });
+        const orders = order.map(({ id, address, createdAt, userId, OrderItems, User }) => {
+            return {
+                id, address, createdAt, userId, email: User.email, username: User.username, phoneNumber: User.phoneNumber,
+                orderItems: OrderItems.map(item => {
+                    return {
+                        novelId: item.NovelContent.Novel.id,
+                        novelTitle: item.NovelContent.Novel.title,
+                        cover: item.NovelContent.Novel.cover,
+                        novelPrice: item.NovelContent.Novel.price,
+                        writer: item.NovelContent.Novel.User.username,
+                        episodeId: item.NovelContent.id,
+                        episodeTitle: item.NovelContent.episodeTitle,
+                        episodePrice: item.NovelContent.episodePrice,
+                    };
+                })
+            };
         });
         res.status(200).json({ orders });
     } catch (err) {
