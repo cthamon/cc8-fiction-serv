@@ -18,7 +18,7 @@ module.exports = (sequelize, DataTypes) => {
     );
 
     OrderItem.associate = models => {
-        OrderItem.belongsTo(models.OrderItem, {
+        OrderItem.belongsTo(models.Order, {
             foreignKey: {
                 name: 'orderId',
                 allowNull: false
@@ -29,7 +29,6 @@ module.exports = (sequelize, DataTypes) => {
         OrderItem.belongsTo(models.NovelContent, {
             foreignKey: {
                 name: 'novelContentId',
-                allowNull: false
             },
             onDelete: 'RESTRICT',
             onUpdate: 'RESTRICT'

@@ -47,7 +47,7 @@ exports.getAllEpisode = async (req, res, next) => {
     try {
         const { novelId } = req.params;
         const episode = await NovelContent.findAll({ where: { novelId }, include: { model: Novel, include: { model: User } } });
-        const episodes = episode.map(({ id, episodeNumber, episodeTitle, content, price, Novel }) => { return { id, title: Novel.title, writer: Novel.User.username, episodeNumber, episodeTitle, content, price }; });
+        const episodes = episode.map(({ id, episodeNumber, episodeTitle, content, price, Novel }) => { return { id, title: Novel.title, novelId: Novel.id, writer: Novel.User.username, episodeNumber, episodeTitle, content, price }; });
         res.status(200).json({ episodes });
     } catch (err) {
         next(err);
