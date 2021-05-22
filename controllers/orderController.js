@@ -16,7 +16,7 @@ exports.getOrder = async (req, res, next) => {
                         writer: item.NovelContent.Novel.User.username,
                         episodeId: item.NovelContent.id,
                         episodeTitle: item.NovelContent.episodeTitle,
-                        episodePrice: item.NovelContent.episodePrice,
+                        episodePrice: item.NovelContent.price,
                     };
                 })
             };

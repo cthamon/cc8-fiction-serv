@@ -214,7 +214,7 @@ exports.viewHistory = async (req, res, next) => {
             order: [['updatedAt', 'DESC']],
             include: { model: NovelContent, include: Novel }
         });
-        const histories = history.map(item => { return { novel: item.NovelContent.Novel.title, episodeTitle: item.NovelContent.episodeTitle, updatedAt: item.updatedAt, removeId: item.id }; });
+        const histories = history.map(item => { return { novelId: item.NovelContent.Novel.id, novel: item.NovelContent.Novel.title, episodeId: item.NovelContent.id, episodeTitle: item.NovelContent.episodeTitle, episodeNumber: item.NovelContent.episodeNumber, updatedAt: item.updatedAt, removeId: item.id }; });
         res.status(200).json({ histories });
     } catch (err) {
         next(err);
