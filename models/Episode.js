@@ -1,6 +1,6 @@
 module.exports = (sequelize, DataTypes) => {
-    const NovelContent = sequelize.define(
-        'NovelContent',
+    const Episode = sequelize.define(
+        'Episode',
         {
             episodeNumber: {
                 type: DataTypes.INTEGER,
@@ -8,10 +8,6 @@ module.exports = (sequelize, DataTypes) => {
             },
             episodeTitle: {
                 type: DataTypes.STRING,
-                allowNull: false,
-            },
-            content: {
-                type: DataTypes.TEXT,
                 allowNull: false,
             },
             price: {
@@ -24,8 +20,8 @@ module.exports = (sequelize, DataTypes) => {
         }
     );
 
-    NovelContent.associate = models => {
-        NovelContent.belongsTo(models.Novel, {
+    Episode.associate = models => {
+        Episode.belongsTo(models.Novel, {
             foreignKey: {
                 name: 'novelId',
                 allowNull: false
@@ -33,25 +29,33 @@ module.exports = (sequelize, DataTypes) => {
             onDelete: 'RESTRICT',
             onUpdate: 'RESTRICT'
         });
-        NovelContent.hasMany(models.Comment, {
+        Episode.hasMany(models.Comment, {
             foreignKey: {
-                name: 'novelContentId',
+                name: 'episodeId',
                 allowNull: false
             },
             onDelete: 'RESTRICT',
             onUpdate: 'RESTRICT'
         });
-        NovelContent.hasMany(models.OrderItem, {
+        Episode.hasMany(models.OrderItem, {
             foreignKey: {
-                name: 'novelContentId',
+                name: 'episodeId',
                 allowNull: false
             },
             onDelete: 'RESTRICT',
             onUpdate: 'RESTRICT'
         });
-        NovelContent.hasMany(models.ReadHistory, {
+        Episode.hasMany(models.ReadHistory, {
             foreignKey: {
-                name: 'novelContentId',
+                name: 'episodeId',
+                allowNull: false
+            },
+            onDelete: 'RESTRICT',
+            onUpdate: 'RESTRICT'
+        });
+        Episode.hasMany(models.Paragraph, {
+            foreignKey: {
+                name: 'episodeId',
                 allowNull: false
             },
             onDelete: 'RESTRICT',
@@ -59,5 +63,5 @@ module.exports = (sequelize, DataTypes) => {
         });
     };
 
-    return NovelContent;
+    return Episode;
 };

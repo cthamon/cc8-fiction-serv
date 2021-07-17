@@ -21,9 +21,9 @@ module.exports = (sequelize, DataTypes) => {
             onDelete: 'RESTRICT',
             onUpdate: 'RESTRICT'
         });
-        Comment.belongsTo(models.NovelContent, {
+        Comment.belongsTo(models.Episode, {
             foreignKey: {
-                name: 'novelContentId',
+                name: 'episodeId',
                 allowNull: false
             },
             onDelete: 'RESTRICT',

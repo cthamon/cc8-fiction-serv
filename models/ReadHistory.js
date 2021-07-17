@@ -15,9 +15,9 @@ module.exports = (sequelize, DataTypes) => {
             onDelete: 'RESTRICT',
             onUpdate: 'RESTRICT'
         });
-        ReadHistory.belongsTo(models.NovelContent, {
+        ReadHistory.belongsTo(models.Episode, {
             foreignKey: {
-                name: 'novelContentId',
+                name: 'episodeId',
                 allowNull: false
             },
             onDelete: 'RESTRICT',

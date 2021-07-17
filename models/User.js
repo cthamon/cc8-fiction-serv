@@ -83,7 +83,7 @@ module.exports = (sequelize, DataTypes) => {
             onUpdate: 'RESTRICT'
         });
         User.hasMany(models.Rating, {
-            as: 'RequestTo',
+            as: 'requestTo',
             foreignKey: {
                 name: 'userId',
                 allowNull: false
@@ -92,7 +92,7 @@ module.exports = (sequelize, DataTypes) => {
             onUpdate: 'RESTRICT'
         });
         User.hasMany(models.ReadHistory, {
-            as: 'RequestFrom',
+            as: 'requestFrom',
             foreignKey: {
                 name: 'userId',
                 allowNull: false
