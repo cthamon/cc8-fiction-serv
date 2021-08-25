@@ -1,7 +1,7 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { Op } = require('sequelize');
-const { User, Novel, NovelContent, Follow, FollowNovel, ReadHistory } = require('../models');
+const { User, Novel, Episode, Follow, FollowNovel, ReadHistory } = require('../models');
 const cloudinary = require('cloudinary').v2;
 const fs = require('fs');
 
@@ -22,9 +22,10 @@ exports.protect = async (req, res, next) => {
 };
 
 exports.me = (req, res, next) => {
-    const { email, username, password, profileImg, description, address, phoneNumber } = req.user;
+    const { id, email, username, password, profileImg, description, address, phoneNumber } = req.user;
     res.status(200).json({
         user: {
+            id,
             email,
             username,
             password,
@@ -34,6 +35,16 @@ exports.me = (req, res, next) => {
             phoneNumber
         }
     });
+};
+
+exports.userProfile = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const user = await User.findOne({ where: { id } });
+        res.status(200).json({ user });
+    } catch (err) {
+        next(err);
+    }
 };
 
 exports.uploadPicture = async (req, res, next) => {
@@ -123,19 +134,9 @@ exports.deleteProfilePic = async (req, res, next) => {
 
 exports.updateUser = async (req, res, next) => {
     try {
-        const { description } = req.body;
-        await User.update({ description }, { where: { id: req.user.id } });
-        res.status(200).json({ message: 'update user success' });
-    } catch (err) {
-        next(err);
-    }
-};
-
-exports.updateSecureUser = async (req, res, next) => {
-    try {
         const { currentPassword, description, address, phoneNumber } = req.body;
         const isMatch = await bcrypt.compare(currentPassword, req.user.password);
-        if (!isMatch) return res.status(400).json({ message: 'incorrect current password' });
+        if (!isMatch) return res.status(400).json({ message: 'Incorrect password' });
         await User.update({ description, address, phoneNumber }, { where: { id: req.user.id } });
         res.status(200).json({ message: 'update user success' });
     } catch (err) {
@@ -146,7 +147,7 @@ exports.updateSecureUser = async (req, res, next) => {
 exports.getFollowList = async (req, res, next) => {
     try {
         const followList = await Follow.findAll({ where: { followerId: req.user.id }, include: { model: User, as: 'Following', attribute: ['id', 'username'] } });
-        const followLists = followList.map(item => { return { username: item.Following.username, profileImg: item.Following.profileImg, unFollowId: item.id }; });
+        const followLists = followList.map(item => { return { username: item.Following.username, profileImg: item.Following.profileImg, unFollowUserId: item.Following.id }; });
         res.status(200).json({ followLists });
     } catch (err) {
         next(err);
@@ -167,8 +168,8 @@ exports.follow = async (req, res, next) => {
 
 exports.unfollow = async (req, res, next) => {
     try {
-        const { id } = req.params;
-        await Follow.destroy({ where: { id } });
+        const { followingId } = req.params;
+        await Follow.destroy({ where: { [Op.and]: [{ followingId }, { followerId: req.user.id }] } });
         res.status(200).json({ message: 'unfollow' });
     } catch (err) {
         next(err);
@@ -178,7 +179,7 @@ exports.unfollow = async (req, res, next) => {
 exports.getFollowNovelList = async (req, res, next) => {
     try {
         const novelList = await FollowNovel.findAll({ where: { userId: req.user.id }, include: { model: Novel, include: { model: User } }, order: [[Novel, 'title']] });
-        const novelLists = novelList.map(item => { return { title: item.Novel.title, description: item.Novel.description, novelType: item.Novel.novelType, cover: item.Novel.cover, writer: item.Novel.User.username, unFollowNovelId: item.id }; });
+        const novelLists = novelList.map(item => { return { title: item.Novel.title, description: item.Novel.description, novelType: item.Novel.novelType, cover: item.Novel.cover, writer: item.Novel.User.username, id: item.id, novelId: item.Novel.id }; });
         res.status(200).json({ novelLists });
     } catch (err) {
         next(err);
@@ -199,9 +200,19 @@ exports.followNovel = async (req, res, next) => {
 
 exports.unfollowNovel = async (req, res, next) => {
     try {
-        const { id } = req.params;
-        await FollowNovel.destroy({ where: { id } });
+        const { novelId } = req.params;
+        await FollowNovel.destroy({ where: { novelId } });
         res.status(200).json({ message: 'unfollow' });
+    } catch (err) {
+        next(err);
+    }
+};
+
+exports.getReadNovelList = async (req, res, next) => {
+    try {
+        const readList = await ReadHistory.findAll({ include: { model: Episode } });
+        const novelList = readList.map(item => { return { novelId: item.Episode.novelId, episodeId: item.episodeId, userId: item.userId }; });
+        res.status(200).json({ novelList });
     } catch (err) {
         next(err);
     }
@@ -212,9 +223,9 @@ exports.viewHistory = async (req, res, next) => {
         const history = await ReadHistory.findAll({
             where: { userId: req.user.id },
             order: [['updatedAt', 'DESC']],
-            include: { model: NovelContent, include: Novel }
+            include: { model: Episode, include: Novel }
         });
-        const histories = history.map(item => { return { novelId: item.NovelContent.Novel.id, novel: item.NovelContent.Novel.title, episodeId: item.NovelContent.id, episodeTitle: item.NovelContent.episodeTitle, episodeNumber: item.NovelContent.episodeNumber, updatedAt: item.updatedAt, removeId: item.id }; });
+        const histories = history.map(item => { return { novelId: item.Episode.Novel.id, novel: item.Episode.Novel.title, episodeId: item.Episode.id, episodeTitle: item.Episode.episodeTitle, episodeNumber: item.Episode.episodeNumber, updatedAt: item.updatedAt, removeId: item.id }; });
         res.status(200).json({ histories });
     } catch (err) {
         next(err);
@@ -223,13 +234,13 @@ exports.viewHistory = async (req, res, next) => {
 
 exports.historySave = async (req, res, next) => {
     try {
-        const { novelContentId } = req.params;
-        const history = await ReadHistory.findOne({ where: { [Op.and]: [{ novelContentId }, { userId: req.user.id }] } });
+        const { episodeId } = req.params;
+        const history = await ReadHistory.findOne({ where: { [Op.and]: [{ episodeId }, { userId: req.user.id }] } });
         if (history) {
-            await ReadHistory.update({ userId: req.user.id }, { where: { [Op.and]: [{ novelContentId }, { userId: req.user.id }] } });
+            await ReadHistory.update({ userId: req.user.id }, { where: { [Op.and]: [{ episodeId }, { userId: req.user.id }] } });
             return res.status(400).json({ message: 'update time' });
         }
-        const readHistory = await ReadHistory.create({ userId: req.user.id, novelContentId });
+        const readHistory = await ReadHistory.create({ userId: req.user.id, episodeId });
         res.status(200).json({ readHistory });
     } catch (err) {
         next(err);

@@ -43,6 +43,38 @@ exports.getUserNovel = async (req, res, next) => {
     }
 };
 
+exports.getUserNovelRating = async (req, res, next) => {
+    try {
+        const rating = await Novel.findAll({ where: { userId: req.user.id }, include: { model: Rating } });
+        const novelRating = rating.map(item => item.Ratings);
+        res.status(200).json({ novelRating });
+    } catch (err) {
+        next(err);
+    }
+};
+
+exports.getUserNovelRatingById = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const rating = await Novel.findAll({ where: { userId: id }, include: { model: Rating } });
+        const novelRating = rating.map(item => item.Ratings);
+        res.status(200).json({ novelRating });
+    } catch (err) {
+        next(err);
+    }
+};
+
+exports.getNovelByUserId = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const novel = await Novel.findAll({ where: { userId: id }, include: User });
+        novels = novel.map(({ id, title, description, novelType, cover, price, userId, User }) => { return { id, title, description, novelType, cover, price, userId, writer: User.username, writerImg: User.profileImg }; });
+        res.status(200).json({ novels });
+    } catch (err) {
+        next(err);
+    }
+};
+
 exports.getAllEpisode = async (req, res, next) => {
     try {
         const { novelId } = req.params;
@@ -81,7 +113,7 @@ exports.getParagraph = async (req, res, next) => {
         const { episodeId } = req.params;
         const paragraphs = await Paragraph.findAll({ where: { episodeId }, include: { model: Episode } });
         const paragraph = paragraphs.map(({ paragraph }) => { return { paragraph }; });
-        res.status(200).json({ episodeNumber: paragraphs[0].Episode.episodeNumber, episodeTitle: paragraphs[0].Episode.episodeTitle, price: paragraphs[0].Episode.price, paragraph });
+        res.status(200).json({ episodeId: paragraphs[0].episodeId, episodeNumber: paragraphs[0].Episode.episodeNumber, episodeTitle: paragraphs[0].Episode.episodeTitle, price: paragraphs[0].Episode.price, paragraph });
     } catch (err) {
         next(err);
     }
@@ -136,6 +168,7 @@ exports.deleteNovel = async (req, res, next) => {
         await Comment.destroy({ where: { episodeId } });
         await FollowNovel.destroy({ where: { novelId: id } });
         await Rating.destroy({ where: { novelId: id } });
+        await Paragraph.destroy({ where: { episodeId } });
         await Episode.destroy({ where: { novelId: id } });
         await Novel.destroy({ where: { id } });
         res.status(200).json({ message: 'delete novel success' });
@@ -182,20 +215,28 @@ exports.editContent = async (req, res, next) => {
 exports.deleteContent = async (req, res, next) => {
     try {
         const { id } = req.params;
+        const novelId = (JSON.stringify((await Episode.findAll({ where: { id } }))[0].novelId));
+        const episode = JSON.parse(JSON.stringify(await Episode.findAll({ where: { novelId } })));
         await ReadHistory.destroy({ where: { episodeId: id } });
         await Comment.destroy({ where: { episodeId: id } });
         await Paragraph.destroy({ where: { episodeId: id } });
         await Episode.destroy({ where: { id } });
+        for (let ele of episode) {
+            if (ele.id > id) {
+                let episodeNumber = ele.episodeNumber - 1;
+                await Episode.update({ episodeNumber }, { where: { id: ele.id } });
+            }
+        }
         res.status(200).json({ message: "delete success" });
     } catch (err) {
         next(err);
     }
 };
 
-exports.getAllNovelRating = async (req, res, next) => {
+exports.getNovelRating = async (req, res, next) => {
     try {
         const { novelId } = req.params;
-        const novelRating = await Rating.findAll({ where: { novelId } });
+        const novelRating = await Rating.findAll({ where: { novelId }, include: User });
         res.status(200).json({ novelRating });
     } catch (err) {
         next(err);
@@ -237,20 +278,18 @@ exports.deleteRating = async (req, res, next) => {
 exports.getAllEpisodeComment = async (req, res, next) => {
     try {
         const { episodeId } = req.params;
-        const userComment = await Comment.findAll({ where: { episodeId } });
+        const userComment = await Comment.findAll({ where: { episodeId }, include: { model: User } });
         res.status(200).json({ userComment });
     } catch (err) {
         next(err);
     }
 };
 
-exports.getAllEpisodeCommentNumber = async (req, res, next) => {
+exports.getComment = async (req, res, next) => {
     try {
-        const { novelId, episodeNumber } = req.params;
-        let episodeId = await Episode.findAll({ where: { [Op.and]: [{ novelId, episodeNumber }] } });
-        episodeId = JSON.parse(JSON.stringify(episodeId[0].id));
-        const userComment = await Comment.findAll({ where: { episodeId } });
-        res.status(200).json({ userComment });
+        const { commentId } = req.params;
+        const comment = await Comment.findAll({ where: { id: commentId } });
+        res.status(200).json({ comment });
     } catch (err) {
         next(err);
     }

@@ -20,7 +20,8 @@ module.exports = (sequelize, DataTypes) => {
         Rating.belongsTo(models.User, {
             foreignKey: {
                 name: 'userId',
-                allowNull: false
+                allowNull: false,
+                unique: true
             },
             onDelete: 'RESTRICT',
             onUpdate: 'RESTRICT'
