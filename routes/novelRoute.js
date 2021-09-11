@@ -10,8 +10,10 @@ router.get('/user', userController.protect, novelController.getUserNovel);
 router.get('/userrating', userController.protect, novelController.getUserNovelRating);
 router.get('/userrating/:id', novelController.getUserNovelRatingById);
 router.get('/user/:id', novelController.getNovelByUserId);
+router.get('/noveltypes', novelController.getAllNovelTypes);
+router.get('/episode', novelController.getAllEpisode);
 router.get('/:id', novelController.getNovel);
-router.get('/:novelId/episode', novelController.getAllEpisode);
+router.get('/:novelId/episode', novelController.getNovelEpisode);
 router.get('/content/:id', novelController.getEpisodeById);
 router.get('/:novelId/episode/:episodeNumber', novelController.getEpisode);
 router.get('/paragraph/:episodeId', novelController.getParagraph);
@@ -31,5 +33,6 @@ router.post('/comment/:episodeId', userController.protect, novelController.comme
 router.post('/comment/:novelId/:episodeNumber', userController.protect, novelController.commentEpisodeNumber);
 router.patch('/updatecomment/:id', userController.protect, novelController.updateComment);
 router.delete('/comment/:id', userController.protect, novelController.deleteComment);
+
 
 module.exports = router;

@@ -5,11 +5,7 @@ module.exports = (sequelize, DataTypes) => {
             amount: {
                 type: DataTypes.INTEGER,
                 allowNull: false,
-            },
-            discount: {
-                type: DataTypes.FLOAT,
-                allowNull: false,
-            },
+            }
         },
         {
             underscored: true,

@@ -186,6 +186,15 @@ exports.getFollowNovelList = async (req, res, next) => {
     }
 };
 
+exports.getAllFollowNovelList = async (req, res, next) => {
+    try {
+        const follow = await FollowNovel.findAll();
+        res.status(200).json({ follow });
+    } catch (err) {
+        next(err);
+    }
+};
+
 exports.followNovel = async (req, res, next) => {
     try {
         const { novelId } = req.params;

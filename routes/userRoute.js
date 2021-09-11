@@ -16,6 +16,7 @@ router.get('/follow/', userController.protect, userController.getFollowList);
 router.post('/follow/:followingId', userController.protect, userController.follow);
 router.delete('/unfollow/:followingId', userController.protect, userController.unfollow);
 router.get('/follownovel/', userController.protect, userController.getFollowNovelList);
+router.get('/follownovelall/', userController.getAllFollowNovelList);
 router.post('/follownovel/:novelId', userController.protect, userController.followNovel);
 router.delete('/unfollownovel/:novelId', userController.protect, userController.unfollowNovel);
 router.get('/allread', userController.getReadNovelList);

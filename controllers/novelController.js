@@ -1,5 +1,5 @@
 const { Op } = require('sequelize');
-const { User, Novel, Episode, Rating, Comment, ReadHistory, FollowNovel, Paragraph, sequelize } = require('../models');
+const { User, Novel, Episode, Rating, Comment, ReadHistory, FollowNovel, Paragraph, Purchased, sequelize } = require('../models');
 const cloudinary = require('cloudinary').v2;
 const fs = require('fs');
 
@@ -75,11 +75,21 @@ exports.getNovelByUserId = async (req, res, next) => {
     }
 };
 
-exports.getAllEpisode = async (req, res, next) => {
+exports.getNovelEpisode = async (req, res, next) => {
     try {
         const { novelId } = req.params;
         const episode = await Episode.findAll({ where: { novelId }, include: { model: Novel, include: { model: User } } });
         const episodes = episode.map(({ id, episodeNumber, episodeTitle, price, Novel, updatedAt }) => { return { id, title: Novel.title, novelId: Novel.id, writer: Novel.User.username, episodeNumber, episodeTitle, price, updatedAt }; });
+        res.status(200).json({ episodes });
+    } catch (err) {
+        next(err);
+    }
+};
+
+exports.getAllEpisode = async (req, res, next) => {
+    try {
+        const episode = await Episode.findAll({ include: { model: Novel, include: { model: User } } });
+        const episodes = episode.map(({ id, episodeNumber, episodeTitle, price, Novel, updatedAt }) => { return { id, title: Novel.title, novelId: Novel.id, writer: Novel.User.username, episodeNumber, episodeTitle, price, updatedAt, novelPrice: Novel.price, novelCover: Novel.cover }; });
         res.status(200).json({ episodes });
     } catch (err) {
         next(err);
@@ -182,16 +192,23 @@ exports.createContent = async (req, res, next) => {
         const { novelId } = req.params;
         let { episodeNumber, episodeTitle, price, paragraph } = req.body;
         if (!episodeNumber) episodeNumber = await Episode.count({ where: { novelId } }) + 1;
-        const checkDuplicate = await Episode.findAll({ where: { novelId } });
-        const checkDup = checkDuplicate.map(item => item.episodeNumber);
-        if (checkDup.includes(episodeNumber)) return res.status(400).json({ message: 'episode number exist' });
-        let checker = await Novel.findAll({ where: { id: novelId } });
-        checker = JSON.parse(JSON.stringify(checker[0].userId));
-        if (req.user.id !== checker) return res.status(400).json({ message: 'you are not owner of the novel' });
+        const checkEpisode = await Episode.findAll({ where: { novelId } });
+        const checkDuplicate = checkEpisode.map(item => item.episodeNumber);
+        if (checkDuplicate.includes(episodeNumber)) return res.status(400).json({ message: 'episode number exist' });
+        const novel = await Novel.findAll({ where: { id: novelId } });
+        const ownerChecker = JSON.parse(JSON.stringify(novel[0].userId));
+        if (req.user.id !== ownerChecker) return res.status(400).json({ message: 'you are not owner of the novel' });
         const episode = await Episode.create({ episodeNumber, episodeTitle, novelId, price });
         const episodeId = (JSON.stringify(episode.id));
         const info = paragraph.map(item => ({ 'paragraph': item, episodeId }));
         const content = await Paragraph.bulkCreate(info);
+        await Purchased.create({ userId: req.user.id, episodeId });
+        if (JSON.parse(JSON.stringify(novel[0].price)) !== 0) {
+            let purchasers = await Purchased.findAll({ where: { episodeId: checkEpisode[0].id } });
+            if (purchasers.length === 0) return res.status(200).json({ episode, content });
+            purchasers = purchasers.filter(item => item.userId !== req.user.id).map(item => ({ userId: item.userId, episodeId }));
+            await Purchased.bulkCreate(purchasers);
+        }
         res.status(200).json({ episode, content });
     } catch (err) {
         next(err);
@@ -335,6 +352,16 @@ exports.deleteComment = async (req, res, next) => {
         const { id } = req.params;
         await Comment.destroy({ where: { [Op.and]: [{ id }, { userId: req.user.id }] } });
         res.status(200).json({ message: "delete success" });
+    } catch (err) {
+        next(err);
+    }
+};
+
+exports.getAllNovelTypes = async (req, res, next) => {
+    try {
+        const novelType = await Novel.findAll();
+        const novelTypes = novelType.map(item => item.novelType);
+        res.status(200).json({ novelTypes });
     } catch (err) {
         next(err);
     }
