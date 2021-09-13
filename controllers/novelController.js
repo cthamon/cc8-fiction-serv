@@ -203,13 +203,14 @@ exports.createContent = async (req, res, next) => {
         const info = paragraph.map(item => ({ 'paragraph': item, episodeId }));
         const content = await Paragraph.bulkCreate(info);
         await Purchased.create({ userId: req.user.id, episodeId });
+        if (checkEpisode.length === 0) return res.status(200).json({ episode, content });
         if (JSON.parse(JSON.stringify(novel[0].price)) !== 0) {
             let purchasers = await Purchased.findAll({ where: { episodeId: checkEpisode[0].id } });
             if (purchasers.length === 0) return res.status(200).json({ episode, content });
             purchasers = purchasers.filter(item => item.userId !== req.user.id).map(item => ({ userId: item.userId, episodeId }));
             await Purchased.bulkCreate(purchasers);
         }
-        res.status(200).json({ episode, content });
+        res.status(200).json({ episode, content, checkEpisode });
     } catch (err) {
         next(err);
     }
@@ -237,6 +238,7 @@ exports.deleteContent = async (req, res, next) => {
         await ReadHistory.destroy({ where: { episodeId: id } });
         await Comment.destroy({ where: { episodeId: id } });
         await Paragraph.destroy({ where: { episodeId: id } });
+        await Purchased.destroy({ where: { episodeId: id } });
         await Episode.destroy({ where: { id } });
         for (let ele of episode) {
             if (ele.id > id) {
