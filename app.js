@@ -8,7 +8,9 @@ const orderRoute = require('./routes/orderRoute');
 
 const app = express();
 
-app.use(cors());
+app.use(cors({
+    origin: ['http://localhost:3000', 'http://test001.trueddns.com:27310']
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
